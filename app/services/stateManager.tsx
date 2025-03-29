@@ -212,45 +212,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       saveTimeout.current = undefined;
     }
 
-    // Get current content immediately
+    // Always regenerate Markdown content from the provided structured data
+    // This ensures consistency when updates come from either Markdown editor or Kanban board
     const content = projectDataToMarkdown(projectData);
+
+    // Ensure the project object within projectData also has the latest content
+    // This is important for the optimistic UI update
+    projectData.project.content = content; 
+    projectData.project.updatedAt = new Date().toISOString();
+
+    // Use the project object directly from the modified projectData
+    const updatedProject = projectData.project; 
     
-    // Ensure project content is updated
-    if (projectData.project.content !== content) {
-      projectData.project.content = content;
-    }
-
-    const updatedProject = {
-      ...projectData.project,
-      content,
-      updatedAt: new Date().toISOString()
-    };
-
-    // Optimistic UI update with latest content
+    // Optimistic UI update with latest structure AND regenerated content
     setState(prev => ({ 
       ...prev, 
-      projectData: {
-        ...projectData,
-        project: updatedProject
-      }
+      projectData // Use the fully updated projectData object
     }));
 
     // Persist all changes atomically
     try {
       await Promise.all([
-        databaseService.updateProject(updatedProject),
-        databaseService.updateProjectColumns(
+        // Save the project with the regenerated content
+        databaseService.updateProject(updatedProject), 
+        // Save the updated column/group/card structure
+        databaseService.updateProjectColumns( 
           projectData.project.id,
           projectData.columns
         )
       ]);
       
-      // Force refresh of project data
-      const freshData = await databaseService.getProjectData(projectData.project.id);
-      setState(prev => ({
-        ...prev,
-        projectData: freshData
-      }));
+      // No longer refreshing from database - trust our optimistic update
+      // This prevents overwriting user changes with database state
     } catch (error) {
       console.error('Update failed:', error);
       setState(prev => ({

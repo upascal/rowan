@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Platform } from 'react-native';
 import { ProjectsSidebar } from '../Sidebar/ProjectsSidebar';
 import { MarkdownEditor } from '../Editor/MarkdownEditor';
@@ -6,7 +6,7 @@ import KanbanBoard from '../Board/KanbanBoard';
 import { Project, ProjectData } from '../../types';
 import { databaseService } from '../../services/databaseService';
 import { theme } from '../../utils/theme';
-import { parseMarkdownToProjectData, projectDataToMarkdown } from '../../services/markdownParser';
+import { parseMarkdownToProjectData } from '../../services/markdownParser';
 import { useAppState } from '../../services/stateManager';
 
 type ViewMode = 'markdown' | 'kanban';
@@ -16,16 +16,22 @@ export const ProjectWorkspace: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [markdownContent, setMarkdownContent] = useState('');
   const { updateProject, loadProject, state } = useAppState();
+  const pendingContentRef = useRef<string | null>(null);
 
-  // Sync markdown content with project data
+  // Sync project data with local state
   useEffect(() => {
     if (state.projectData) {
       setSelectedProject(state.projectData.project);
-      // Generate markdown from current project data
-      const content = projectDataToMarkdown(state.projectData);
-      setMarkdownContent(content);
+      
+      // Only update markdown content if:
+      // 1. We're in kanban view (so we're not editing markdown directly)
+      // 2. OR this is the initial load of the project
+      // 3. OR there's no pending content from the editor
+      if (viewMode === 'kanban' || !markdownContent || !pendingContentRef.current) {
+        setMarkdownContent(state.projectData.project.content || '');
+      }
     }
-  }, [state.projectData]);
+  }, [state.projectData, viewMode, markdownContent]);
 
   // Handle project selection
   const handleSelectProject = async (project: Project) => {
@@ -40,7 +46,9 @@ export const ProjectWorkspace: React.FC = () => {
   const handleContentChange = async (content: string) => {
     if (!selectedProject) return;
 
+    // Store the content in both state and ref
     setMarkdownContent(content);
+    pendingContentRef.current = content;
     
     // Parse markdown and update project data
     const data = await parseMarkdownToProjectData(content, selectedProject.name);
@@ -48,20 +56,31 @@ export const ProjectWorkspace: React.FC = () => {
       ...data,
       project: {
         ...selectedProject,
-        content,
+        content, // Pass the raw content directly
         updatedAt: new Date().toISOString()
       }
     };
     
     // Update state and database
     await updateProject(updatedData);
+    
+    // Clear pending content after successful update
+    pendingContentRef.current = null;
   };
 
   // Toggle between markdown and kanban views
   const toggleViewMode = useCallback(() => {
     const newMode = viewMode === 'markdown' ? 'kanban' : 'markdown';
+    
+    // If switching from markdown to kanban, ensure any pending changes are saved
+    if (viewMode === 'markdown' && pendingContentRef.current) {
+      // The editor already debounces changes, but we want to ensure
+      // the latest content is used when switching views
+      handleContentChange(pendingContentRef.current);
+    }
+    
     setViewMode(newMode);
-  }, [viewMode]);
+  }, [viewMode, handleContentChange]);
 
   // Add keyboard shortcut for view toggle
   useEffect(() => {

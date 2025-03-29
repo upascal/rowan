@@ -24,6 +24,20 @@ export interface Column {
   level: number;
   createdAt: string;
   updatedAt: string;
+  groups: Group[]; // Added groups
+  cards: Card[]; // Cards directly under the column
+}
+
+/**
+ * Represents a group within a column
+ */
+export interface Group {
+  id: number;
+  columnId: number;
+  title: string;
+  position: number;
+  createdAt: string;
+  updatedAt: string;
   cards: Card[];
 }
 
@@ -31,12 +45,13 @@ export interface Column {
  * Represents a card in the database
  */
 export interface Card {
-  id: string;
+  id: number; // Changed from string to number to match DB schema
   columnId: number;
+  groupId?: number; // Optional: ID of the group this card belongs to
   text: string;
   completed: boolean;
   position: number;
-  groupName: string; 
+  // groupName: string; // Removed, use groupId instead
   createdAt: string;
   updatedAt: string;
   subtasks: Subtask[];

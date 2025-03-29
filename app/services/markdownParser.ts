@@ -1,8 +1,8 @@
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
-import { Project, Column, Card, Subtask, ProjectData } from '../types';
-import { generateUniqueId, validateAndSanitizeId } from '../utils/idGenerator';
+import { Project, Column, Card, Subtask, ProjectData, Group } from '../types'; // Added Group
+import { generateId } from '../utils/idGenerator'; // Corrected import
 
 
 /**
@@ -35,34 +35,49 @@ export const parseMarkdownToProjectData = async (
     };
     
     let currentColumn: Column | null = null;
-    let currentCard: Card | null = null;
+    let currentGroup: Group | null = null; // Added currentGroup
     
     // Process the AST nodes
     for (const node of ast.children as any[]) {
       try {
-        // Handle headings (columns)
+        // Handle headings (columns and groups)
         if (node.type === 'heading' && 'depth' in node) {
           const title = getTextFromNode(node);
-          console.log('Processing column:', title); // Debug log
-          
           const level = node.depth;
           
-          currentColumn = {
-            id: 0, // Will be assigned by database
-            projectId: 0, // Will be assigned by database
-            title,
-            position: projectData.columns.length,
-            level, // Add the level property
-            createdAt: now,
-            updatedAt: now,
-            cards: []
-          };
-          
-          projectData.columns.push(currentColumn);
-          currentCard = null;
+          if (level === 1) { // Level 1 heading is a Column
+            console.log('Processing Column:', title); // Debug log
+            currentColumn = {
+              id: 0, // Will be assigned by database
+              projectId: 0, // Will be assigned by database
+              title,
+              position: projectData.columns.length,
+              level,
+              createdAt: now,
+              updatedAt: now,
+              groups: [], // Initialize groups
+              cards: []   // Initialize direct cards
+            };
+            projectData.columns.push(currentColumn);
+            currentGroup = null; // Reset group when a new column starts
+          } else if (level === 2 && currentColumn) { // Level 2 heading is a Group (if inside a column)
+            console.log('Processing Group:', title, 'in Column:', currentColumn.title); // Debug log
+            currentGroup = {
+              id: 0, // Will be assigned by database
+              columnId: 0, // Will be assigned by database (linked via column)
+              title,
+              position: currentColumn.groups.length,
+              createdAt: now,
+              updatedAt: now,
+              cards: []
+            };
+            currentColumn.groups.push(currentGroup);
+          } else {
+            console.warn(`Ignoring heading "${title}" at level ${level}. Only level 1 (Column) and level 2 (Group) are supported.`);
+          }
         }
         // Handle lists (cards and subtasks)
-        else if (node.type === 'list' && currentColumn) {
+        else if (node.type === 'list' && currentColumn) { // Ensure we are within a column context
           for (const item of (node as any).children) {
             if (item.type !== 'listItem') continue;
             
@@ -84,27 +99,25 @@ export const parseMarkdownToProjectData = async (
             
             if (isTask) {
               const completed = text.startsWith('[x]');
-              // Extract task ID and text using format: [ ] {id} Task text
-              // Improved ID extraction with better validation
-              const taskMatch = text.slice(4).trim().match(/^{([a-zA-Z0-9_-]+)}\s*(.*)/);
-              const extractedId = taskMatch?.[1];
-              const taskId = extractedId ? validateAndSanitizeId(extractedId) : generateUniqueId();
-              const taskText = taskMatch?.[2] || text.slice(4).trim();
-              console.log('Processing task:', taskText, 'completed:', completed); // Debug log
+              // Remove ID extraction from text, always generate a new ID
+              const taskId = generateId(); // Use the imported generateId function
+              const taskText = text.slice(text.indexOf(']') + 1).trim(); // Get text after '[ ]' or '[x]'
+              console.log('Processing task:', taskText, 'completed:', completed); // Debug log (Removed ID log)
               
               const card: Card = {
-                id: taskId,
-                columnId: 0, // Will be assigned by database
+                id: 0, // Placeholder ID, will be assigned by DB
+                columnId: 0, // Will be assigned by database (linked via column/group)
+                groupId: currentGroup ? 0 : undefined, // Will be assigned by database if group exists
                 text: taskText,
                 completed,
-                position: currentColumn.cards.length,
-                groupName: currentColumn.title,
+                // Position will be set based on whether it's in a group or column
+                position: currentGroup ? currentGroup.cards.length : currentColumn.cards.length,
                 createdAt: now,
                 updatedAt: now,
                 subtasks: []
               };
               
-              // Process subtasks if any
+              // Process subtasks if any (Subtask logic remains the same)
               const sublist = (item as any).children?.find((child: any) => child.type === 'list');
               if (sublist) {
                 for (const subitem of sublist.children) {
@@ -137,7 +150,15 @@ export const parseMarkdownToProjectData = async (
                 }
               }
               
-              currentColumn.cards.push(card);
+              // Add card to the current group or directly to the column
+              if (currentGroup) {
+                currentGroup.cards.push(card);
+                console.log(`Added card "${card.text}" to Group "${currentGroup.title}"`);
+              } else {
+                currentColumn.cards.push(card);
+                 console.log(`Added card "${card.text}" directly to Column "${currentColumn.title}"`);
+              }
+              
             } else {
               console.log('Skipping non-task item:', text); // Debug log
             }
@@ -203,30 +224,45 @@ export const projectDataToMarkdown = (projectData: ProjectData): string => {
     children: [],
   };
   
-  // Add columns (headings) and cards (list items)
+  // Add columns, groups, and cards back to the AST
   for (const column of projectData.columns) {
-    // Add heading
+    // Add column heading (Level 1)
     ast.children.push({
       type: 'heading',
-      depth: column.level,
-      children: [
-        {
-          type: 'text',
-          value: column.title,
-        },
-      ],
+      depth: 1, // Force columns to be level 1
+      children: [{ type: 'text', value: column.title }],
     });
     
-    // Add list if there are cards
-    if (column.cards.length > 0) {
-      const listNode = {
+    // Add cards directly under the column (if any)
+    if (column.cards && column.cards.length > 0) {
+      ast.children.push({
         type: 'list',
         ordered: false,
         spread: false,
         children: column.cards.map(cardToListItem),
-      };
-      
-      ast.children.push(listNode);
+      });
+    }
+    
+    // Add groups and their cards (if any)
+    if (column.groups && column.groups.length > 0) {
+      for (const group of column.groups) {
+        // Add group heading (Level 2)
+        ast.children.push({
+          type: 'heading',
+          depth: 2, // Force groups to be level 2
+          children: [{ type: 'text', value: group.title }],
+        });
+        
+        // Add cards within the group (if any)
+        if (group.cards && group.cards.length > 0) {
+          ast.children.push({
+            type: 'list',
+            ordered: false,
+            spread: false,
+            children: group.cards.map(cardToListItem),
+          });
+        }
+      }
     }
   }
   
@@ -265,7 +301,8 @@ const cardToListItem = (card: Card): any => {
         children: [
           {
             type: 'text',
-            value: `[${card.completed ? 'x' : ' '}] {${card.id}} ${card.text.trim()}`,
+            // Removed the {id} part from the output text
+            value: `[${card.completed ? 'x' : ' '}] ${card.text.trim()}`, 
           },
         ],
       },
@@ -288,6 +325,7 @@ const cardToListItem = (card: Card): any => {
             children: [
               {
                 type: 'text',
+                 // Removed the {id} part from the output text for subtasks too (though they didn't have it before)
                 value: `[${subtask.completed ? 'x' : ' '}] ${subtask.text.trim()}`,
               },
             ],
