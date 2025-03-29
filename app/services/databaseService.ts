@@ -37,6 +37,9 @@ interface IDatabaseService {
   createSubtask(subtask: Omit<Subtask, 'id' | 'createdAt' | 'updatedAt'>): Promise<Subtask>;
   updateSubtask(subtask: Subtask): Promise<boolean>;
   deleteSubtask(id: number): Promise<boolean>;
+
+  // Reset operation
+  resetDatabase(): Promise<void>;
 }
 
 // Default template for new projects (Keep groupName for parsing old data if needed, but new logic uses groupId)
@@ -183,6 +186,31 @@ class SQLiteDatabaseService implements IDatabaseService {
       console.log('Database initialized successfully');
     });
   }
+
+  async resetDatabase(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.db.transaction(async (tx: any) => {
+        try {
+          console.log('Resetting SQLite database...');
+          // Drop tables in reverse order of creation/dependency
+          await this.executeSql(tx, 'DROP TABLE IF EXISTS subtasks;', []);
+          await this.executeSql(tx, 'DROP TABLE IF EXISTS cards;', []);
+          await this.executeSql(tx, 'DROP TABLE IF EXISTS groups;', []);
+          await this.executeSql(tx, 'DROP TABLE IF EXISTS columns;', []);
+          await this.executeSql(tx, 'DROP TABLE IF EXISTS projects;', []);
+          console.log('Tables dropped.');
+          // Re-initialize
+          this.initDatabase(); // This runs async, but we resolve after dropping
+          console.log('Database re-initialized.');
+          resolve();
+        } catch (error) {
+          console.error('Error resetting database:', error);
+          reject(error);
+        }
+      });
+    });
+  }
+
 
   async createProject(name: string): Promise<ProjectData> {
     const now = new Date().toISOString();
@@ -647,55 +675,55 @@ class SQLiteDatabaseService implements IDatabaseService {
             [projectId]
           );
 
-          // Insert new columns, groups, cards, subtasks
+          // Insert new columns, groups, cards, subtasks, capturing real IDs
           for (const column of columns) {
+            // Insert Column and get its real ID
             const [columnResult] = await this.executeSql(tx,
-              `INSERT INTO columns
-              (project_id, title, position, level, created_at, updated_at)
+              `INSERT INTO columns (project_id, title, position, level, created_at, updated_at)
               VALUES (?, ?, ?, ?, ?, ?)`,
               [projectId, column.title, column.position, column.level || 0, now, now]
             );
-            const columnId = parseInt(columnResult.insertId);
+            const realColumnId = parseInt(columnResult.insertId); // Use the actual generated ID
 
-            // Insert groups
+            // Insert groups using the realColumnId
             for (const group of column.groups || []) {
               const [groupResult] = await this.executeSql(tx,
                 'INSERT INTO groups (column_id, title, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-                [columnId, group.title, group.position, now, now]
+                [realColumnId, group.title, group.position, now, now] // Use realColumnId
               );
-              const groupId = parseInt(groupResult.insertId);
+              const realGroupId = parseInt(groupResult.insertId); // Use the actual generated ID
 
-              // Insert cards for this group
+              // Insert cards for this group using realColumnId and realGroupId
               for (const card of group.cards) {
                 const [cardResult] = await this.executeSql(tx,
                   'INSERT INTO cards (column_id, group_id, text, completed, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                  [columnId, groupId, card.text, card.completed, card.position, now, now]
+                  [realColumnId, realGroupId, card.text, card.completed, card.position, now, now] // Use real IDs
                 );
-                const cardId = parseInt(cardResult.insertId);
+                const realCardId = parseInt(cardResult.insertId); // Use the actual generated ID
 
-                // Insert subtasks
+                // Insert subtasks using realCardId
                 for (const subtask of card.subtasks) {
                   await this.executeSql(tx,
                     'INSERT INTO subtasks (card_id, text, completed, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-                    [cardId, subtask.text, subtask.completed, subtask.position, now, now]
+                    [realCardId, subtask.text, subtask.completed, subtask.position, now, now] // Use realCardId
                   );
                 }
               }
             }
 
-            // Insert cards directly under the column
+            // Insert cards directly under the column using realColumnId
             for (const card of column.cards) {
               const [cardResult] = await this.executeSql(tx,
                 'INSERT INTO cards (column_id, group_id, text, completed, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [columnId, null, card.text, card.completed, card.position, now, now]
+                [realColumnId, null, card.text, card.completed, card.position, now, now] // Use realColumnId
               );
-              const cardId = parseInt(cardResult.insertId);
+              const realCardId = parseInt(cardResult.insertId); // Use the actual generated ID
 
-              // Insert subtasks
+              // Insert subtasks using realCardId
               for (const subtask of card.subtasks) {
                 await this.executeSql(tx,
                   'INSERT INTO subtasks (card_id, text, completed, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-                  [cardId, subtask.text, subtask.completed, subtask.position, now, now]
+                  [realCardId, subtask.text, subtask.completed, subtask.position, now, now] // Use realCardId
                 );
               }
             }
@@ -720,73 +748,8 @@ class SQLiteDatabaseService implements IDatabaseService {
             'UPDATE projects SET name = ?, content = ?, updated_at = ? WHERE id = ?',
             [project.name, project.content || '', now, project.id]
           );
-
-          // If markdown content exists, parse it and update the kanban structure
-          if (project.content) {
-            // Enable foreign keys for cascade delete
-            await this.executeSql(tx, 'PRAGMA foreign_keys = ON;', []);
-            // Delete existing columns (should cascade to groups, cards, subtasks)
-            await this.executeSql(tx,
-              'DELETE FROM columns WHERE project_id = ?',
-              [project.id]
-            );
-
-            // Parse markdown and create new structure
-            const parsedData = await parseMarkdownToProjectData(project.content, project.name);
-            if (parsedData) {
-              for (const column of parsedData.columns) {
-                // Create new column
-                const [columnResult] = await this.executeSql(tx,
-                  'INSERT INTO columns (project_id, title, position, level, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-                  [project.id, column.title, column.position, column.level || 0, now, now]
-                );
-                const columnId = parseInt(columnResult.insertId);
-
-                // Create groups
-                for (const group of column.groups || []) {
-                  const [groupResult] = await this.executeSql(tx,
-                    'INSERT INTO groups (column_id, title, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?)',
-                    [columnId, group.title, group.position, now, now]
-                  );
-                  const groupId = parseInt(groupResult.insertId);
-
-                  // Create cards for this group
-                  for (const card of group.cards) {
-                    const [cardResult] = await this.executeSql(tx,
-                      'INSERT INTO cards (column_id, group_id, text, completed, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                      [columnId, groupId, card.text, card.completed, card.position, now, now]
-                    );
-                    const cardId = parseInt(cardResult.insertId);
-
-                    // Create subtasks
-                    for (const subtask of card.subtasks) {
-                      await this.executeSql(tx,
-                        'INSERT INTO subtasks (card_id, text, completed, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-                        [cardId, subtask.text, subtask.completed, subtask.position, now, now]
-                      );
-                    }
-                  }
-                }
-
-                // Create cards directly under the column
-                for (const card of column.cards) {
-                  const [cardResult] = await this.executeSql(tx,
-                    'INSERT INTO cards (column_id, group_id, text, completed, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                    [columnId, null, card.text, card.completed, card.position, now, now]
-                  );
-                  const cardId = parseInt(cardResult.insertId);
-
-                  // Create subtasks
-                  for (const subtask of card.subtasks) {
-                    await this.executeSql(tx,
-                      'INSERT INTO subtasks (card_id, text, completed, position, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-                      [cardId, subtask.text, subtask.completed, subtask.position, now, now]
-                    );
-                  }
-                }
-              }
-            }
-          }
+          // Removed the logic that re-parses content and updates columns here.
+          // That responsibility is handled by updateProjectColumns.
           resolve(result.rowsAffected > 0);
         } catch (error) {
           reject(error);
@@ -1373,43 +1336,24 @@ class WebDatabaseService implements IDatabaseService {
 
     const now = new Date().toISOString();
 
-    // Simple update: replace columns entirely. More granular updates would be complex.
-    projectData.columns = columns.map(column => ({
-      ...column,
-      id: column.id || this.nextIds.columns++, // Assign new ID if missing
-      createdAt: column.createdAt || now,
-      updatedAt: now,
-      groups: (column.groups || []).map(group => ({
-         ...group,
-         id: group.id || this.nextIds.groups++,
-         createdAt: group.createdAt || now,
-         updatedAt: now,
-         cards: (group.cards || []).map(card => ({
-            ...card,
-            id: card.id || this.nextIds.cards++,
-            createdAt: card.createdAt || now,
-            updatedAt: now,
-            subtasks: (card.subtasks || []).map(subtask => ({
-               ...subtask,
-               id: subtask.id || this.nextIds.subtasks++,
-               createdAt: subtask.createdAt || now,
-               updatedAt: now,
-            }))
-         }))
-      })),
-      cards: (column.cards || []).map(card => ({
-         ...card,
-         id: card.id || this.nextIds.cards++,
-         createdAt: card.createdAt || now,
-         updatedAt: now,
-         subtasks: (card.subtasks || []).map(subtask => ({
-            ...subtask,
-            id: subtask.id || this.nextIds.subtasks++,
-            createdAt: subtask.createdAt || now,
-            updatedAt: now,
-         }))
-      }))
-    }));
+    // Delete existing columns/groups/cards/subtasks and re-insert with correct IDs
+    projectData.columns = []; // Clear existing columns in the local copy
+    delete data.projectsData[projectId]; // Remove old project data entry
+    this.saveData(data); // Save removal
+
+    // Re-create the project data with correct structure and IDs
+    // This leverages the existing createProjectWithColumns logic which handles ID generation correctly
+    const recreatedProjectData = await this.createProjectWithColumns(
+        projectData.project.name,
+        projectData.project.content || '', // Use existing content
+        columns // Use the new column structure passed in
+    );
+
+    // Update the original project ID in the recreated data to maintain consistency if needed elsewhere
+    // (Though typically the user would reload or select the project again)
+    recreatedProjectData.project.id = projectId;
+    data.projects = data.projects.map(p => p.id === projectId ? recreatedProjectData.project : p);
+    data.projectsData[projectId] = recreatedProjectData;
 
     this.saveData(data);
   }
@@ -1429,45 +1373,8 @@ class WebDatabaseService implements IDatabaseService {
     data.projects[index] = updatedProject;
     if (data.projectsData[project.id]) {
       data.projectsData[project.id].project = updatedProject;
-
-      // If content updated, re-parse and update structure (similar to SQLite version)
-      if (project.content && data.projectsData[project.id].project.content !== project.content) {
-         try {
-           const parsedData = await parseMarkdownToProjectData(project.content, project.name);
-           if (parsedData) {
-             // Replace columns, groups, cards based on parsed data
-             // This requires careful ID management and merging logic
-             // For simplicity here, we just replace the columns array
-             data.projectsData[project.id].columns = parsedData.columns.map(col => ({
-                ...col,
-                id: this.nextIds.columns++, // Assign new IDs during update
-                groups: (col.groups || []).map(g => ({
-                   ...g,
-                   id: this.nextIds.groups++,
-                   cards: g.cards.map(c => ({
-                      ...c,
-                      id: this.nextIds.cards++,
-                      subtasks: c.subtasks.map(s => ({
-                         ...s,
-                         id: this.nextIds.subtasks++
-                      }))
-                   }))
-                })),
-                cards: col.cards.map(c => ({
-                   ...c,
-                   id: this.nextIds.cards++,
-                   subtasks: c.subtasks.map(s => ({
-                      ...s,
-                      id: this.nextIds.subtasks++
-                   }))
-                }))
-             }));
-           }
-         } catch (error) {
-           console.error("Error parsing markdown on update:", error);
-           // Decide how to handle parse errors - revert or keep old structure?
-         }
-      }
+      // Removed the logic that re-parses content and updates columns here.
+      // That responsibility is handled by updateProjectColumns.
     }
 
     this.saveData(data);
@@ -1839,6 +1746,28 @@ class WebDatabaseService implements IDatabaseService {
     }
     return found;
   }
+
+  async resetDatabase(): Promise<void> {
+    console.log('Resetting Web localStorage database...');
+    try {
+      localStorage.removeItem(this.STORAGE_KEY);
+      // Reset ID counters
+      this.nextIds = {
+        projects: 1,
+        columns: 1,
+        groups: 1,
+        cards: 1,
+        subtasks: 1
+      };
+      // Re-initialize (might be minimal effect after removal, but good practice)
+      this.initDatabase();
+      console.log('Web database reset.');
+      return Promise.resolve();
+    } catch (error) {
+      console.error('Error resetting web database:', error);
+      return Promise.reject(error);
+    }
+  }
 }
 
 
@@ -1918,7 +1847,18 @@ class DatabaseService implements IDatabaseService {
   async deleteSubtask(id: number): Promise<boolean> {
     return this.service.deleteSubtask(id);
   }
+
+  async resetDatabase(): Promise<void> {
+    return this.service.resetDatabase();
+  }
 }
 
 // Export a singleton instance
 export const databaseService = new DatabaseService();
+
+// Expose for development debugging ONLY
+if (__DEV__) {
+  // Use a unique name to avoid potential conflicts
+  (global as any).devDatabaseService = databaseService;
+  console.log('Database service exposed globally as "devDatabaseService" for debugging.');
+}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 import { ProjectsSidebar } from '../Sidebar/ProjectsSidebar';
 import { MarkdownEditor } from '../Editor/MarkdownEditor';
 import KanbanBoard from '../Board/KanbanBoard';
@@ -11,12 +12,29 @@ import { useAppState } from '../../services/stateManager';
 
 type ViewMode = 'markdown' | 'kanban';
 
+const VIEW_MODE_KEY = 'projectWorkspaceViewMode'; // Key for AsyncStorage
+
 export const ProjectWorkspace: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [markdownContent, setMarkdownContent] = useState('');
   const { updateProject, loadProject, state } = useAppState();
   const pendingContentRef = useRef<string | null>(null);
+
+  // Load initial view mode from AsyncStorage
+  useEffect(() => {
+    const loadViewMode = async () => {
+      try {
+        const savedMode = await AsyncStorage.getItem(VIEW_MODE_KEY);
+        if (savedMode === 'markdown' || savedMode === 'kanban') {
+          setViewMode(savedMode);
+        }
+      } catch (e: unknown) { // Explicitly type 'e'
+        console.error("Failed to load view mode from AsyncStorage", e);
+      }
+    };
+    loadViewMode();
+  }, []);
 
   // Sync project data with local state
   useEffect(() => {
@@ -79,8 +97,13 @@ export const ProjectWorkspace: React.FC = () => {
       handleContentChange(pendingContentRef.current);
     }
     
+    // Save the new mode
+    AsyncStorage.setItem(VIEW_MODE_KEY, newMode).catch((e: unknown) => { // Explicitly type 'e'
+      console.error("Failed to save view mode to AsyncStorage", e);
+    });
+    
     setViewMode(newMode);
-  }, [viewMode, handleContentChange]);
+  }, [viewMode, handleContentChange]); // Keep handleContentChange dependency if needed
 
   // Add keyboard shortcut for view toggle
   useEffect(() => {

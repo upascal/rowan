@@ -204,48 +204,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
   
-  // Update the project with debounced auto-save and column persistence
+  // Update the project - trusts the caller to provide consistent data
   const updateProject = async (projectData: ProjectData) => {
-    // Cancel any pending saves
+    // Cancel any pending saves (if applicable, though ProjectWorkspace handles debouncing now)
     if (saveTimeout.current) {
       clearTimeout(saveTimeout.current);
       saveTimeout.current = undefined;
     }
 
-    // Always regenerate Markdown content from the provided structured data
-    // This ensures consistency when updates come from either Markdown editor or Kanban board
-    const content = projectDataToMarkdown(projectData);
-
-    // Ensure the project object within projectData also has the latest content
-    // This is important for the optimistic UI update
-    projectData.project.content = content; 
+    // Ensure updatedAt is set
     projectData.project.updatedAt = new Date().toISOString();
 
-    // Use the project object directly from the modified projectData
-    const updatedProject = projectData.project; 
-    
-    // Optimistic UI update with latest structure AND regenerated content
-    setState(prev => ({ 
-      ...prev, 
-      projectData // Use the fully updated projectData object
+    // Optimistic UI update with the provided data
+    // The caller (ProjectWorkspace or KanbanBoard) is responsible for ensuring
+    // projectData.project.content and projectData.columns are consistent.
+    setState(prev => ({
+      ...prev,
+      projectData // Use the fully updated projectData object passed in
     }));
 
     // Persist all changes atomically
     try {
-      await Promise.all([
-        // Save the project with the regenerated content
-        databaseService.updateProject(updatedProject), 
-        // Save the updated column/group/card structure
-        databaseService.updateProjectColumns( 
-          projectData.project.id,
-          projectData.columns
-        )
-      ]);
+      // Save the project metadata (including the potentially updated content)
+      await databaseService.updateProject(projectData.project);
       
-      // No longer refreshing from database - trust our optimistic update
-      // This prevents overwriting user changes with database state
+      // Save the updated column/group/card structure
+      await databaseService.updateProjectColumns(
+        projectData.project.id,
+        projectData.columns
+      );
+
+      // No need to refresh from DB, trust optimistic update.
+      console.log('Project updated successfully in DB');
+
     } catch (error) {
       console.error('Update failed:', error);
+      // Consider reverting optimistic update or showing a more specific error
       setState(prev => ({
         ...prev,
         error: `Update failed: ${error}`
@@ -300,27 +294,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updatedAt: new Date().toISOString()
       };
       
-      // Update state with complete project data
+      // Update state with complete project data AND updated recent projects list
       setState(prevState => ({
         ...prevState,
         projectData: {
           project: updatedProject,
           columns: parsedData?.columns || []
         },
-        isLoading: false,
-      }));
-      
-      // Update recent projects
-      setState(prevState => ({
-        ...prevState,
         settings: {
           ...prevState.settings,
           recentProjects: [
-            projectData.project,
+            projectData.project, // Add the new project to the beginning
             ...prevState.settings.recentProjects,
           ],
         },
+        isLoading: false,
+        error: null, // Clear any previous error
       }));
+
     } catch (error) {
       console.error('Error creating project:', error);
       setState(prevState => ({

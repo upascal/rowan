@@ -44,9 +44,10 @@ export const parseMarkdownToProjectData = async (
         if (node.type === 'heading' && 'depth' in node) {
           const title = getTextFromNode(node);
           const level = node.depth;
+          console.log(`[Parser] Found Heading - Level: ${level}, Title: "${title}"`); // More specific log
           
           if (level === 1) { // Level 1 heading is a Column
-            console.log('Processing Column:', title); // Debug log
+            // console.log('Processing Column:', title); // Debug log
             currentColumn = {
               id: 0, // Will be assigned by database
               projectId: 0, // Will be assigned by database
@@ -58,10 +59,12 @@ export const parseMarkdownToProjectData = async (
               groups: [], // Initialize groups
               cards: []   // Initialize direct cards
             };
+            console.log(`[Parser] Setting currentColumn: "${title}"`);
             projectData.columns.push(currentColumn);
             currentGroup = null; // Reset group when a new column starts
+            console.log(`[Parser] Reset currentGroup`);
           } else if (level === 2 && currentColumn) { // Level 2 heading is a Group (if inside a column)
-            console.log('Processing Group:', title, 'in Column:', currentColumn.title); // Debug log
+            // console.log('Processing Group:', title, 'in Column:', currentColumn.title); // Debug log
             currentGroup = {
               id: 0, // Will be assigned by database
               columnId: 0, // Will be assigned by database (linked via column)
@@ -71,15 +74,19 @@ export const parseMarkdownToProjectData = async (
               updatedAt: now,
               cards: []
             };
+            console.log(`[Parser] Setting currentGroup: "${title}" under Column: "${currentColumn.title}"`);
             currentColumn.groups.push(currentGroup);
           } else {
-            console.warn(`Ignoring heading "${title}" at level ${level}. Only level 1 (Column) and level 2 (Group) are supported.`);
+            console.warn(`[Parser] Ignoring heading "${title}" at level ${level}.`);
           }
         }
         // Handle lists (cards and subtasks)
-        else if (node.type === 'list' && currentColumn) { // Ensure we are within a column context
-          for (const item of (node as any).children) {
-            if (item.type !== 'listItem') continue;
+        else if (node.type === 'list') {
+           console.log(`[Parser] Found List Node.`); // Log list detection
+           if (currentColumn) { // Ensure we are within a column context
+             console.log(`[Parser] Processing List under Column: "${currentColumn.title}"` + (currentGroup ? ` / Group: "${currentGroup.title}"` : ''));
+             for (const item of (node as any).children) {
+               if (item.type !== 'listItem') continue;
             
             // Check if this is a task by looking for a checkbox
             const paragraph = (item as any).children?.find((child: any) => child.type === 'paragraph');
@@ -102,7 +109,7 @@ export const parseMarkdownToProjectData = async (
               // Remove ID extraction from text, always generate a new ID
               const taskId = generateId(); // Use the imported generateId function
               const taskText = text.slice(text.indexOf(']') + 1).trim(); // Get text after '[ ]' or '[x]'
-              console.log('Processing task:', taskText, 'completed:', completed); // Debug log (Removed ID log)
+              // console.log('Processing task:', taskText, 'completed:', completed); // Debug log (Removed ID log)
               
               const card: Card = {
                 id: 0, // Placeholder ID, will be assigned by DB
@@ -153,18 +160,24 @@ export const parseMarkdownToProjectData = async (
               // Add card to the current group or directly to the column
               if (currentGroup) {
                 currentGroup.cards.push(card);
-                console.log(`Added card "${card.text}" to Group "${currentGroup.title}"`);
+                console.log(`[Parser] Added card "${card.text}" to Group "${currentGroup.title}"`);
               } else {
                 currentColumn.cards.push(card);
-                 console.log(`Added card "${card.text}" directly to Column "${currentColumn.title}"`);
+                 console.log(`[Parser] Added card "${card.text}" directly to Column "${currentColumn.title}"`);
               }
               
             } else {
-              console.log('Skipping non-task item:', text); // Debug log
+              const itemText = getTextFromListItem(item); // Try to get text for logging
+              console.log(`[Parser] Skipping non-task list item: "${itemText}"`); // Debug log
             }
           }
+        } else {
+           console.warn('[Parser] Found List Node but no currentColumn is set. Skipping list.'); // Log if list is skipped
         }
-      } catch (nodeError) {
+      } else {
+         console.log(`[Parser] Skipping node type: ${node.type}`); // Log other skipped nodes
+      }
+    } catch (nodeError) {
         console.error('Error processing node:', nodeError);
         console.error('Node type:', node.type);
         console.error('Node content:', JSON.stringify(node, null, 2));
