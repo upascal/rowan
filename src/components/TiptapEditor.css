@@ -1,6 +1,4 @@
-/* src/components/TiptapEditor.css
-
-/* — General Editor — */
+/* — Base Editor Styles — */
 .ProseMirror {
   padding: 1rem;
   line-height: 1.6;
@@ -9,24 +7,53 @@
 
 /* — Headings — */
 .ProseMirror h1 {
+  position: relative;
+  padding-left: 1.5em; /* space for handle */
   font-size: 1.8em;
   font-weight: 600;
   margin: 1.5rem 0 0.75rem;
   padding-bottom: 0.3em;
   border-bottom: 1px solid #eee;
   color: #1a202c;
+  cursor: grab;
 }
 .ProseMirror h2 {
+  position: relative;
+  padding-left: 1.5em;
   font-size: 1.5em;
   font-weight: 600;
   margin: 1.25rem 0 0.6rem;
   color: #2d3748;
+  cursor: grab;
 }
 .ProseMirror h3 {
+  position: relative;
+  padding-left: 1.5em;
   font-size: 1.25em;
   font-weight: 600;
   margin: 1rem 0 0.5rem;
   color: #4a5568;
+  cursor: grab;
+}
+
+.ProseMirror h1::before,
+.ProseMirror h2::before,
+.ProseMirror h3::before {
+  content: "⋮⋮";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #718096;
+  opacity: 0.5;
+  cursor: grab;
+  transition: opacity 0.2s;
+}
+.ProseMirror h1:hover::before,
+.ProseMirror h2:hover::before,
+.ProseMirror h3:hover::before {
+  opacity: 1;
 }
 
 /* — Paragraphs — */
@@ -42,7 +69,7 @@
   padding-left: 0;
 }
 
-/* — Nested task‐lists — */
+/* — Nested Task‐lists — */
 .ProseMirror ul[data-type="taskList"] ul[data-type="taskList"],
 .ProseMirror ul.task-list ul.task-list {
   list-style: none;
@@ -51,24 +78,27 @@
   border-left: 2px solid #e2e8f0;
 }
 
-/* — Task‐item as flex container — */
+/* — Task‐item as Flex Container — */
 .ProseMirror li[data-type="taskItem"],
 .ProseMirror li.task-item {
   display: flex;
-  align-items: flex-start;   /* pin checkbox + text to top of the first line */
+  align-items: flex-start;
   margin: 0.25rem 0;
   padding: 0.25rem 0;
 }
 
-/* — Checkbox label & input — */
+/* — Checkbox Label & Input — */
 .ProseMirror li[data-type="taskItem"] label,
 .ProseMirror li.task-item label {
+  /* make label a positioned flex‐item so handle sits with it */
+  position: relative;
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   margin-right: 0.75rem;
-  margin-top: 0.2rem;         /* nudge checkbox down to align with text */
+  margin-top: 0.2rem;
   cursor: pointer;
+  padding-left: 1.25em; /* space for the handle */
 }
 
 .ProseMirror li[data-type="taskItem"] input[type="checkbox"],
@@ -81,25 +111,44 @@
   border-radius: 3px;
 }
 
-/* — Task content block — */
+/* — Drag handle on label — */
+.ProseMirror li[data-type="taskItem"] label::before,
+.ProseMirror li.task-item label::before {
+  content: "⋮⋮";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #718096;
+  opacity: 1;
+  cursor: grab;
+  transition: opacity 0.2s;
+}
+.ProseMirror li[data-type="taskItem"] label:hover::before,
+.ProseMirror li.task-item label:hover::before {
+  opacity: 0.5;
+}
+
+/* — Task Content Block — */
 .ProseMirror li[data-type="taskItem"] > div,
 .ProseMirror li.task-item > div {
-  display: block !important;  /* allow it to behave as a normal flex‐item */
+  display: block !important;
   flex: 1 1 auto;
-  min-width: 0;               /* enable long text to wrap */
+  min-width: 0;
   margin: 0;
   padding: 0;
   white-space: normal;
 }
 
-/* — Paragraph inside task content — */
+/* — Paragraph Inside Task Content — */
 .ProseMirror li[data-type="taskItem"] > div p,
 .ProseMirror li.task-item > div p {
   margin: 0;
   word-break: break-word;
 }
 
-/* — Completed tasks — */
+/* — Completed Tasks — */
 .ProseMirror li[data-type="taskItem"][data-checked="true"] > div,
 .ProseMirror li.task-item[data-checked="true"] > div {
   text-decoration: line-through;
