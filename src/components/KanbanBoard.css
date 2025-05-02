@@ -1,0 +1,33 @@
+.kanban-board {
+    display: grid;
+    grid-auto-flow: column;       /* flow children into columns */
+    grid-auto-columns: 1fr;       /* each column gets equal flex */
+    gap: 1rem;
+    overflow-x: auto;             /* scroll if too many columns */
+    padding: 1rem 0;
+  }
+  
+  .kanban-column {
+    display: flex;
+    flex-direction: column;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    max-height: 100%;
+  }
+  
+  /* style the heading at the top of each column */
+  .kanban-column h1 {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+  
+  /* wrap the rest of the content in a scrollable area */
+  .kanban-column > :not(h1) {
+    padding: 1rem;
+    overflow-y: auto;
+  }
+  

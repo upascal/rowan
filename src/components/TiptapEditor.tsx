@@ -1,73 +1,102 @@
-import React from 'react';
+/* relative-path: src/components/TiptapEditor.tsx */
+
+import React, { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TaskList from '@tiptap/extension-task-list';
-import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
-import { Markdown } from 'tiptap-markdown'; // Import the markdown extension
-import './TiptapEditor.css'; // We'll create this for styling
+import { Markdown } from 'tiptap-markdown';
+import { CustomTaskItem } from './CustomTaskItem';
+import './TiptapEditor.css';
 
 interface TiptapEditorProps {
-  content: string; // Expect markdown content
-  onChange: (newContent: string) => void; // Will provide markdown content
+  content: string;
+  onChange: (newContent: string) => void;
   placeholder?: string;
 }
 
 const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, placeholder }) => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // track whether document has any level-1 headings
+  const [hasSections, setHasSections] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // Configure StarterKit options if needed
-        // Exclude extensions if they conflict or are not needed
-        heading: {
-          levels: [1, 2, 3], // Allow H1, H2, H3
-        },
-        // Keep other defaults like paragraphs, bold, italic, etc.
+        heading: { levels: [1, 2, 3] },
       }),
       Markdown.configure({
-        html: true, // Allow HTML input/output? Set to false if only markdown needed
-        tightLists: true, // No <p> inside <li> in markdown output
-        tightListClass: 'tight', // Class for tight lists
-        bulletListMarker: '-', // Or '*'
-        linkify: true, // Auto-detect links
-        breaks: false, // Add <br> for single newlines?
-        // transformPastedText: true, // Transform pasted text to markdown
-        // transformCopiedText: true, // Transform copied text to markdown
+        html: true,
+        tightLists: true,
+        tightListClass: 'tight',
+        bulletListMarker: '-',
+        linkify: true,
+        breaks: false,
       }),
       TaskList.configure({
-        // TaskList configuration if needed
-        HTMLAttributes: {
-          class: 'task-list pl-0', // Add class for styling, remove padding
-        },
+        HTMLAttributes: { class: 'task-list pl-0' },
       }),
-      TaskItem.configure({
-        nested: true, // Allow nested task items
-        HTMLAttributes: {
-          // Simplified class to avoid potential conflicts
-          class: 'task-item',
-        },
+      CustomTaskItem.configure({
+        nested: true,
+        HTMLAttributes: { class: 'task-item' },
       }),
       Placeholder.configure({
         placeholder: placeholder || 'Start typing your tasks...',
       }),
     ],
-    content: content, // Set initial content
+    content,
     editorProps: {
       attributes: {
-        // Removed Tailwind's typography plugin classes as they may conflict with task list styling
         class: 'focus:outline-none p-4 h-full w-full',
       },
     },
     onUpdate: ({ editor }) => {
-      // When the editor content changes, call the onChange prop
-      // Use the markdown extension to get the markdown content
       onChange(editor.storage.markdown.getMarkdown());
     },
   });
 
-  // Render the editor content area
+  // post-process markdown to fix empty task items
+  useEffect(() => {
+    if (!editor) return;
+    const originalGetMarkdown = editor.storage.markdown.getMarkdown;
+    editor.storage.markdown.getMarkdown = () => {
+      let md = originalGetMarkdown();
+      return md.replace(/- \\\[ \\\]/g, '- [ ]');
+    };
+  }, [editor]);
+
+  // detect presence of any H1 headings to toggle Kanban
+  useEffect(() => {
+    if (!editor) return;
+    const checkSections = () => {
+      let found = false;
+      editor.state.doc.descendants(node => {
+        if (node.type.name === 'heading' && node.attrs.level === 1) {
+          found = true;
+          return false;
+        }
+      });
+      setHasSections(found);
+    };
+
+    checkSections();
+    editor.on('update', checkSections);
+    return () => {
+      editor.off('update', checkSections);
+    };
+  }, [editor]);
+
   return (
-    <EditorContent editor={editor} className="h-full w-full overflow-auto border rounded shadow-inner" />
+    <div
+      ref={wrapperRef}
+      className={hasSections ? 'editor-wrapper kanban' : 'editor-wrapper'}
+    >
+      <EditorContent
+        editor={editor}
+        className="h-full w-full overflow-auto border rounded shadow-inner"
+      />
+    </div>
   );
 };
 

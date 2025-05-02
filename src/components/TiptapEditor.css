@@ -1,4 +1,4 @@
-/* src/components/TiptapEditor.css
+/* relative-path: src/components/TiptapEditor.css */
 
 /* — General Editor — */
 .ProseMirror {
@@ -15,12 +15,6 @@
   padding-bottom: 0.3em;
   border-bottom: 1px solid #eee;
   color: #1a202c;
-}
-.ProseMirror h2 {
-  font-size: 1.5em;
-  font-weight: 600;
-  margin: 1.25rem 0 0.6rem;
-  color: #2d3748;
 }
 .ProseMirror h3 {
   font-size: 1.25em;
@@ -105,4 +99,51 @@
   text-decoration: line-through;
   color: #a0aec0;
   opacity: 0.7;
+}
+
+/* — Task Group — */
+.ProseMirror h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0;
+  padding: 0.75rem 1rem;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-bottom: none;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  color: #2d3748;
+}
+
+/* Style for task lists that follow h2 headings */
+.ProseMirror h2 + ul[data-type="taskList"],
+.ProseMirror h2 + ul.task-list {
+  margin-top: 0;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  background-color: #f8fafc;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Add spacing after task groups */
+.ProseMirror h2 + ul[data-type="taskList"] + *,
+.ProseMirror h2 + ul.task-list + * {
+  margin-top: 2rem;
+}
+
+/* enable Kanban multicol only when .kanban is present */
+.editor-wrapper.kanban .ProseMirror {
+  column-width: 280px;
+  column-gap: 1rem;
+  overflow-x: auto;
+  white-space: normal;
+}
+
+/* every H1 starts a new column */
+.editor-wrapper.kanban .ProseMirror h1 {
+  break-before: column;
+  break-inside: avoid-column;
 }
