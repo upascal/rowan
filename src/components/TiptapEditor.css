@@ -134,16 +134,35 @@
   margin-top: 2rem;
 }
 
-/* enable Kanban multicol only when .kanban is present */
-.editor-wrapper.kanban .ProseMirror {
-  column-width: 280px;
-  column-gap: 1rem;
-  overflow-x: auto;
-  white-space: normal;
-}
-
-/* every H1 starts a new column */
+/* one new column per H1 */
 .editor-wrapper.kanban .ProseMirror h1 {
   break-before: column;
   break-inside: avoid-column;
 }
+
+
+/* Make sure the wrapper fills its parent (the flex container) */
+.editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+
+/* When Kanban is active, make ProseMirror fill the wrapper and scroll both ways */
+.editor-wrapper.kanban .ProseMirror {
+  /* let grid flow into columns */
+  column-width: 280px;
+  column-gap: 1rem;
+
+  /* flex child fills remaining height */
+  flex: 1 1 auto;
+
+  /* scroll if content overflows vertically or horizontally */
+  overflow: auto;
+  white-space: normal;
+}
+
+
+
+

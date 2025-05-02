@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useCallback } from 'react'; // Added useEffect, useCallback
 import TiptapEditor from './components/TiptapEditor';
 import ProjectSidebar from './components/ProjectSidebar'; // Import the new sidebar
-import KanbanBoard from './components/KanbanBoard';
 
 import './App.css';
 
