@@ -1,0 +1,255 @@
+/* Tiptap editor styles */
+.editor-container .tiptap {
+  flex: 1;
+  border: none;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+/* Raw textarea view */
+.editor-container textarea {
+  flex: 1;
+  border: none;
+  padding: 1rem;
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  resize: none;
+  outline: none;
+  font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  transition: background-color var(--transition-speed) ease-in-out,
+              color var(--transition-speed) ease-in-out;
+}
+
+/* — Base Editor Styles — */
+.ProseMirror {
+  padding: 1.25rem;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  transition: color var(--transition-speed) ease-in-out;
+  min-height: 100%;
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
+
+/* — Headings — */
+.ProseMirror h1 {
+  position: relative;
+  padding-left: 0em; /* space for handle */
+  font-size: 1.8em;
+  font-weight: 600;
+  margin: 1.5rem 0 0.75rem;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-text-primary);
+}
+
+.ProseMirror h2 {
+  position: relative;
+  padding-left: 0em;
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 1.25rem 0 0.6rem;
+  color: var(--color-text-primary);
+}
+
+.ProseMirror h3 {
+  position: relative;
+  padding-left: 1.5em;
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+  color: var(--color-text-secondary);
+}
+
+/* — Paragraphs — */
+.ProseMirror p {
+  margin-bottom: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+/* — Task-list container — */
+.ProseMirror ul[data-type="taskList"],
+.ProseMirror ul.task-list {
+  list-style: none;
+  margin: 0.5rem 0;
+  padding-left: 0;
+}
+
+/* — Nested Task-lists — */
+.ProseMirror ul[data-type="taskList"] ul[data-type="taskList"],
+.ProseMirror ul.task-list ul.task-list {
+  list-style: none;
+  margin: 0.5rem 0 0.5rem 1.5rem;
+  padding-left: 0;
+  border-left: 2px solid var(--color-border);
+}
+
+/* — Task-item as Flex Container — */
+.ProseMirror li[data-type="taskItem"],
+.ProseMirror li.task-item {
+  display: flex;
+  align-items: flex-start;
+  margin: 0.375rem 0;
+  padding: 0.375rem 0;
+  transition: background-color var(--transition-speed) ease-in-out;
+  border-radius: 0.25rem;
+}
+
+.ProseMirror li[data-type="taskItem"]:hover,
+.ProseMirror li.task-item:hover {
+  background-color: var(--color-accent-secondary);
+}
+
+/* — Checkbox Label & Input — */
+.ProseMirror li[data-type="taskItem"] label,
+.ProseMirror li.task-item label {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.75rem;
+  margin-top: 0.2rem;
+  cursor: pointer;
+  padding-left: 1.25em; /* space for the handle */
+}
+
+.ProseMirror li[data-type="taskItem"] input[type="checkbox"],
+.ProseMirror li.task-item input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 0;
+  accent-color: var(--color-accent-primary);
+  border: 1.5px solid var(--color-border);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  background-color: var(--color-bg-input);
+  transition: all var(--transition-speed) ease-in-out;
+}
+
+.ProseMirror li[data-type="taskItem"] input[type="checkbox"]:checked,
+.ProseMirror li.task-item input[type="checkbox"]:checked {
+  background-color: var(--color-accent-primary);
+  border-color: var(--color-accent-primary);
+}
+
+.ProseMirror li[data-type="taskItem"] input[type="checkbox"]:focus,
+.ProseMirror li.task-item input[type="checkbox"]:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* — Task Content Block — */
+.ProseMirror li[data-type="taskItem"] > div,
+.ProseMirror li.task-item > div {
+  display: block !important;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  white-space: normal;
+}
+
+/* — Paragraph Inside Task Content — */
+.ProseMirror li[data-type="taskItem"] > div p,
+.ProseMirror li.task-item > div p {
+  margin: 0;
+  word-break: break-word;
+}
+
+/* — Completed Tasks — */
+.ProseMirror li[data-type="taskItem"][data-checked="true"] > div,
+.ProseMirror li.task-item[data-checked="true"] > div {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+  opacity: 0.8;
+}
+
+/* Style for task lists that follow h2 headings */
+.ProseMirror h2 + ul[data-type="taskList"],
+.ProseMirror h2 + ul.task-list {
+  margin-top: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+  background-color: var(--color-bg-tertiary);
+  box-shadow: var(--shadow-sm);
+  transition: background-color var(--transition-speed) ease-in-out,
+              border-color var(--transition-speed) ease-in-out,
+              box-shadow var(--transition-speed) ease-in-out;
+}
+
+/* Add a subtle header to task groups */
+.ProseMirror h2 {
+  padding: 0.75rem 1rem;
+  margin-bottom: 0;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  background-color: var(--color-accent-secondary);
+  transition: background-color var(--transition-speed) ease-in-out;
+}
+
+/* Add spacing after task groups */
+.ProseMirror h2 + ul[data-type="taskList"] + *,
+.ProseMirror h2 + ul.task-list + * {
+  margin-top: 2rem;
+}
+
+/* — Kanban mode styles — */
+
+/* wrapper must fill its parent and act as a flex container */
+.editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* multicol layout when .kanban is present */
+.editor-wrapper.kanban .ProseMirror {
+  column-width: 280px;
+  column-gap: 1.25rem;
+  padding-top: 1.5rem;      /* align all H1s consistently */
+  flex: 1 1 auto;           /* fill wrapper vertically */
+  overflow: auto;           /* scroll both axes */
+  white-space: normal;
+}
+
+/* only H1 may start a new column */
+.editor-wrapper.kanban .ProseMirror h1 {
+  margin-top: 0;            /* remove extra top margin */
+  margin-bottom: 0.75rem;
+  break-before: column;
+  break-inside: avoid-column;
+}
+
+/* prevent other blocks from breaking columns */
+.editor-wrapper.kanban .ProseMirror > *:not(h1) {
+  break-before: avoid-column;
+  break-inside: avoid-column;
+}
+
+/* Placeholder text */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  height: 0;
+}
+
+/* Empty editor state */
+.editor-container .empty-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  text-align: center;
+  padding: 2rem;
+}

@@ -1,20 +1,5 @@
-// File: src/logic/markdownParser.ts
 import { v4 as uuidv4 } from 'uuid';
-
-export interface Task { // Add export
-  id: string;
-  text: string;
-  completed: boolean;
-  subtasks: Task[];
-  indentation: number; // To track nesting level
-}
-
-export interface BlockGroup { // Add export
-  id: string;
-  heading: string;
-  level: number;
-  tasks: Task[]; // Changed from content: string
-}
+import { Task, TaskGroup } from '../models/task';
 
 // Function to parse task lines and build hierarchy
 function parseTasksFromString(content: string): Task[] {
@@ -60,12 +45,11 @@ function parseTasksFromString(content: string): Task[] {
   return rootTasks; // Return only the top-level tasks for this block
 }
 
-
-export function parseMarkdownToBlocks(text: string): BlockGroup[] {
+export function parseMarkdownToBlocks(text: string): TaskGroup[] {
   const lines = text.split(/\r?\n/);
-  const blocks: BlockGroup[] = [];
+  const blocks: TaskGroup[] = [];
 
-  let currentBlock: BlockGroup | null = null;
+  let currentBlock: TaskGroup | null = null;
   let currentContentLines: string[] = []; // Store lines for the current block
 
   for (const line of lines) {

@@ -1,13 +1,10 @@
-/* relative-path: src/components/TiptapEditor.tsx */
-
 import React, { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TaskList from '@tiptap/extension-task-list';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from 'tiptap-markdown';
-import { CustomTaskItem } from './CustomTaskItem';
-import './TiptapEditor.css';
+import { CustomTaskItem } from './extensions/CustomTaskItem';
 
 interface TiptapEditorProps {
   content: string;
@@ -94,7 +91,7 @@ const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, placehol
     >
       <EditorContent
         editor={editor}
-        className="h-full w-full overflow-auto border rounded shadow-inner"
+        className="h-full w-full overflow-auto border rounded shadow-inner transition-colors"
       />
     </div>
   );

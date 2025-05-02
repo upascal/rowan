@@ -1,0 +1,108 @@
+/* Sidebar styles */
+.project-sidebar {
+  width: 16rem; /* w-64 */
+  background-color: var(--color-bg-secondary);
+  padding: 1rem; /* p-4 */
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--color-border);
+  height: 100%;
+  flex-shrink: 0; /* Prevent sidebar from shrinking */
+  z-index: 10; /* Ensure sidebar is above other content if needed */
+  overflow-y: auto; /* Allow scrolling within sidebar if content overflows */
+  transition: background-color var(--transition-speed) ease-in-out,
+              border-color var(--transition-speed) ease-in-out;
+}
+
+/* Sidebar header */
+.project-sidebar h2 {
+  color: var(--color-text-primary);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+/* Project list styles */
+.project-list {
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+  list-style-type: none;
+  padding: 0;
+}
+
+.project-list li {
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.375rem;
+  color: var(--color-text-secondary);
+  transition: background-color var(--transition-speed) ease-in-out,
+              color var(--transition-speed) ease-in-out;
+}
+
+.project-list li:hover {
+  background-color: var(--color-accent-secondary);
+}
+
+.project-list li.selected {
+  background-color: var(--color-accent-primary);
+  color: white;
+  font-weight: 500;
+}
+
+/* New project input */
+.project-sidebar input[type="text"] {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  background-color: var(--color-bg-input);
+  color: var(--color-text-primary);
+  margin-bottom: 1rem;
+  transition: all var(--transition-speed) ease-in-out;
+}
+
+.project-sidebar input[type="text"]:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.project-sidebar input[type="text"]::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Delete button styles */
+.delete-button {
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  opacity: 0;
+  transition: all var(--transition-speed) ease-in-out;
+  line-height: 1;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+}
+
+.project-list li:hover .delete-button {
+  opacity: 1;
+}
+
+.delete-button:hover {
+  background-color: var(--color-accent-secondary-hover);
+}
+
+.delete-button.confirming {
+  opacity: 1;
+  background-color: var(--color-error);
+  color: white;
+}
