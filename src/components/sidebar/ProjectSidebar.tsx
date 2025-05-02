@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
 
 interface ProjectSidebarProps {
   projects: string[]; // Array of project names
@@ -19,7 +20,7 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
   onSelectProject,
   onDeleteProject,
 }) => {
-  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
+  // Removed confirmingDelete state
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -27,29 +28,7 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
     }
   };
 
-  const handleDeleteClick = (projectName: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent selecting the project when clicking delete
-    if (confirmingDelete === projectName) {
-      onDeleteProject(projectName);
-      setConfirmingDelete(null); // Reset confirmation state
-    } else {
-      setConfirmingDelete(projectName); // Set this project for confirmation
-    }
-  };
-
-  // Reset confirmation if clicking outside or on another project
-  const handleProjectSelect = (projectName: string) => {
-    setConfirmingDelete(null); // Cancel any pending delete confirmation
-    onSelectProject(projectName);
-  };
-
-  // Reset confirmation if mouse leaves the list item where confirmation is pending
-  const handleMouseLeave = (projectName: string) => {
-     if (confirmingDelete === projectName) {
-        // Optional: Automatically cancel confirmation if mouse leaves
-        // setConfirmingDelete(null);
-     }
-  };
+  // Removed handleDeleteClick, handleProjectSelect (related to confirmation), handleMouseLeave
 
   return (
     <div className="project-sidebar">
@@ -80,18 +59,51 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
         {projects.map((projectName) => (
           <li
             key={projectName}
-            onClick={() => handleProjectSelect(projectName)}
-            onMouseLeave={() => handleMouseLeave(projectName)}
+            onClick={() => onSelectProject(projectName)} // Simplified onClick
+            // Removed onMouseLeave
             className={`${selectedProject === projectName ? 'selected' : ''}`}
           >
             <span className="truncate flex-grow mr-2">{projectName}</span>
-            <button
-              onClick={(e) => handleDeleteClick(projectName, e)}
-              className={`delete-button ${confirmingDelete === projectName ? 'confirming' : ''}`}
-              title={confirmingDelete === projectName ? "Confirm Delete" : "Delete Project"}
-            >
-              {confirmingDelete === projectName ? 'Sure?' : 'X'}
-            </button>
+
+            {/* Radix Alert Dialog for Delete Confirmation */}
+            <AlertDialog.Root>
+              <AlertDialog.Trigger asChild>
+                <button
+                  onClick={(e) => e.stopPropagation()} // Prevent li onClick
+                  className="delete-button"
+                  title="Delete Project"
+                >
+                  X
+                </button>
+              </AlertDialog.Trigger>
+              <AlertDialog.Portal>
+                <AlertDialog.Overlay className="alert-dialog-overlay" />
+                <AlertDialog.Content className="alert-dialog-content">
+                  <AlertDialog.Title className="alert-dialog-title">
+                    Are you sure?
+                  </AlertDialog.Title>
+                  <AlertDialog.Description className="alert-dialog-description">
+                    This action cannot be undone. This will permanently delete the project "{projectName}".
+                  </AlertDialog.Description>
+                  <div style={{ display: 'flex', gap: 25, justifyContent: 'flex-end' }}>
+                    <AlertDialog.Cancel asChild>
+                      <button className="button mauve">Cancel</button>
+                    </AlertDialog.Cancel>
+                    <AlertDialog.Action asChild>
+                      <button
+                        className="button red"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent li onClick just in case
+                          onDeleteProject(projectName);
+                        }}
+                      >
+                        Yes, delete project
+                      </button>
+                    </AlertDialog.Action>
+                  </div>
+                </AlertDialog.Content>
+              </AlertDialog.Portal>
+            </AlertDialog.Root>
           </li>
         ))}
       </ul>

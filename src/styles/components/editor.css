@@ -169,164 +169,92 @@
   opacity: 0.8;
 }
 
-/* Task Group Styling - Simplified approach */
+/* Task Group Styling - Using proper DOM structure */
 
-/* H1 Group - Outermost container */
-.ProseMirror h1 {
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
+/* Task Group - Base styles */
+.ProseMirror .task-group {
+  margin-bottom: 1.5rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Level 1 Task Group (H1) */
+.ProseMirror .task-group-level-1 {
   background-color: var(--color-heading-group-1-dark);
   border: 2px solid var(--color-heading-border-1-dark);
-  border-bottom: none;
-  margin-bottom: 0;
-  margin-top: 1.5rem;
-  z-index: 3;
-  position: relative;
-}
-
-/* Content directly after H1 */
-.ProseMirror h1 + * {
-  background-color: var(--color-heading-group-1-dark);
-  border: 2px solid var(--color-heading-border-1-dark);
-  border-top: none;
-  padding: 1rem;
-  margin-top: 0;
-  position: relative;
-  z-index: 3;
-}
-
-/* H2 Group - Middle container */
-.ProseMirror h2 {
-  background-color: var(--color-heading-group-2-dark);
-  border: 1px solid var(--color-heading-border-2-dark);
-  border-bottom: none;
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
-  margin: 1rem 1.5rem 0;
-  position: relative;
-  z-index: 4;
-}
-
-/* Content directly after H2 */
-.ProseMirror h2 + * {
-  background-color: var(--color-heading-group-2-dark);
-  border: 1px solid var(--color-heading-border-2-dark);
-  border-top: none;
-  margin: 0 1.5rem;
-  padding: 1rem;
-  position: relative;
-  z-index: 4;
-}
-
-/* H3 Group - Innermost container */
-.ProseMirror h3 {
-  background-color: var(--color-heading-group-3-dark);
-  border: 1px solid var(--color-heading-border-3-dark);
-  border-bottom: none;
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
-  margin: 1rem 2rem 0;
-  position: relative;
-  z-index: 5;
-}
-
-/* Content directly after H3 */
-.ProseMirror h3 + * {
-  background-color: var(--color-heading-group-3-dark);
-  border: 1px solid var(--color-heading-border-3-dark);
-  border-top: none;
-  margin: 0 2rem;
-  padding: 1rem;
-  position: relative;
-  z-index: 5;
-}
-
-/* Bottom rounding for task groups */
-.ProseMirror h1 ~ h1,
-.ProseMirror h1 ~ h2,
-.ProseMirror h1 ~ h3,
-.ProseMirror h2 ~ h1,
-.ProseMirror h2 ~ h2,
-.ProseMirror h2 ~ h3,
-.ProseMirror h3 ~ h1,
-.ProseMirror h3 ~ h2,
-.ProseMirror h3 ~ h3 {
   margin-top: 1.5rem;
 }
 
-/* Add bottom rounding to the last element before a new heading */
-.ProseMirror h1 ~ h1:not(:first-of-type)::before,
-.ProseMirror h1 ~ h2::before,
-.ProseMirror h1 ~ h3::before,
-.ProseMirror h2 ~ h1::before,
-.ProseMirror h2 ~ h2:not(:first-of-type)::before,
-.ProseMirror h2 ~ h3::before,
-.ProseMirror h3 ~ h1::before,
-.ProseMirror h3 ~ h2::before,
-.ProseMirror h3 ~ h3:not(:first-of-type)::before {
-  content: "";
-  display: block;
-  height: 1rem;
-  margin-top: -1rem;
-  border-bottom-left-radius: 0.5rem;
-  border-bottom-right-radius: 0.5rem;
-  background-color: var(--color-bg-tertiary);
-  position: relative;
-  z-index: 2;
+/* Level 2 Task Group (H2) */
+.ProseMirror .task-group-level-2 {
+  background-color: var(--color-heading-group-2-dark);
+  border: 1px solid var(--color-heading-border-2-dark);
+  margin: 1rem 1.5rem;
 }
 
-/* Add spacing after groups */
-.ProseMirror h1 ~ h1,
-.ProseMirror h2 ~ h1,
-.ProseMirror h3 ~ h1 {
-  margin-top: 2rem;
+/* Level 3 Task Group (H3) */
+.ProseMirror .task-group-level-3 {
+  background-color: var(--color-heading-group-3-dark);
+  border: 1px solid var(--color-heading-border-3-dark);
+  margin: 1rem 2rem;
 }
 
-/* Dark mode styling */
+/* Headings inside task groups */
+.ProseMirror .task-group h1,
+.ProseMirror .task-group h2,
+.ProseMirror .task-group h3 {
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  margin: 0;
+  background: none;
+}
+
+/* Content inside task groups */
+.ProseMirror .task-group > div > *:not(h1):not(h2):not(h3) {
+  padding: 1rem;
+  margin: 0;
+  border: none;
+}
+
+/* Add spacing between task groups */
+.ProseMirror .task-group + .task-group {
+  margin-top: 1rem;
+}
+
+/* Dark mode styling for task groups */
 @media (prefers-color-scheme: dark) {
-  .ProseMirror h1 {
+  .ProseMirror .task-group-level-1 {
     background-color: var(--color-heading-group-1-dark);
     border-color: var(--color-heading-border-1-dark);
   }
   
-  .ProseMirror h1 + * {
-    border-color: var(--color-heading-border-1-dark);
-  }
-  
-  .ProseMirror h2 {
+  .ProseMirror .task-group-level-2 {
     background-color: var(--color-heading-group-2-dark);
     border-color: var(--color-heading-border-2-dark);
   }
   
-  .ProseMirror h2 + * {
-    border-color: var(--color-heading-border-2-dark);
-  }
-  
-  .ProseMirror h3 {
+  .ProseMirror .task-group-level-3 {
     background-color: var(--color-heading-group-3-dark);
     border-color: var(--color-heading-border-3-dark);
-  }
-  
-  .ProseMirror h3 + * {
-    border-color: var(--color-heading-border-3-dark);
-  }
-  
-  .ProseMirror h1 ~ h1:not(:first-of-type)::before,
-  .ProseMirror h1 ~ h2::before,
-  .ProseMirror h1 ~ h3::before,
-  .ProseMirror h2 ~ h1::before,
-  .ProseMirror h2 ~ h2:not(:first-of-type)::before,
-  .ProseMirror h2 ~ h3::before,
-  .ProseMirror h3 ~ h1::before,
-  .ProseMirror h3 ~ h2::before,
-  .ProseMirror h3 ~ h3:not(:first-of-type)::before {
-    background-color: var(--color-bg-tertiary);
   }
 }
 
 /* Add spacing after the last task group */
 .ProseMirror > *:last-child {
   margin-bottom: 2rem;
+}
+
+/* Editor tools */
+.editor-tools {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.editor-tools button {
+  font-size: 0.875rem;
+  transition: all var(--transition-speed) ease-in-out;
 }
 
 /* — Kanban mode styles — */
@@ -366,17 +294,16 @@
   overflow-y: auto;
 }
 
-/* only H1 may start a new column */
-.editor-wrapper.kanban .ProseMirror h1 {
+/* only task groups with H1 may start a new column */
+.editor-wrapper.kanban .ProseMirror .task-group-level-1 {
   margin-top: 0;            /* remove extra top margin */
   margin-bottom: 0.75rem;
   break-before: column;
   break-inside: avoid-column;
-  
 }
 
 /* prevent other blocks from breaking columns */
-.editor-wrapper.kanban .ProseMirror > *:not(h1) {
+.editor-wrapper.kanban .ProseMirror > *:not(.task-group-level-1) {
   break-before: avoid-column;
   break-inside: avoid-column;
 }

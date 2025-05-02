@@ -150,3 +150,87 @@
   background-color: var(--color-error);
   color: white;
 }
+
+/* Radix Alert Dialog Styles */
+.alert-dialog-overlay {
+  background-color: rgba(0, 0, 0, 0.4);
+  position: fixed;
+  inset: 0;
+  z-index: 40; /* Below content */
+  animation: overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.alert-dialog-content {
+  background-color: var(--color-bg-primary);
+  border-radius: 6px;
+  box-shadow: hsl(206 22% 7% / 35%) 0px 10px 38px -10px, hsl(206 22% 7% / 20%) 0px 10px 20px -15px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 500px;
+  max-height: 85vh;
+  padding: 25px;
+  z-index: 50; /* Above overlay */
+  animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+.alert-dialog-content:focus { outline: none; }
+
+.alert-dialog-title {
+  margin: 0 0 10px 0;
+  font-weight: 600;
+  font-size: 1.125rem; /* text-lg */
+  color: var(--color-text-primary);
+}
+
+.alert-dialog-description {
+  margin-bottom: 20px;
+  font-size: 0.875rem; /* text-sm */
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+/* Basic button styling for dialog actions */
+.alert-dialog-content .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 0 15px;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 500;
+  height: 35px;
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+  transition: background-color var(--transition-speed) ease-in-out;
+}
+.alert-dialog-content .button.mauve {
+  background-color: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}
+.alert-dialog-content .button.mauve:hover {
+  background-color: var(--color-accent-secondary);
+}
+.alert-dialog-content .button.red {
+  background-color: var(--color-error-secondary);
+  color: var(--color-error);
+  border-color: var(--color-error-border);
+}
+.alert-dialog-content .button.red:hover {
+  background-color: var(--color-error);
+  color: white;
+}
+
+@keyframes overlayShow {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes contentShow {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
