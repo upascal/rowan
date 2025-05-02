@@ -4,9 +4,9 @@ import StarterKit from '@tiptap/starter-kit';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
- // import { Markdown } from 'tiptap-markdown'; // Import the markdown extension
+import { Markdown } from 'tiptap-markdown'; // Import the markdown extension
 import './TiptapEditor.css'; // We'll create this for styling
- // 
+
 interface TiptapEditorProps {
   content: string; // Expect markdown content
   onChange: (newContent: string) => void; // Will provide markdown content
@@ -16,11 +16,40 @@ interface TiptapEditorProps {
 const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, placeholder }) => {
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
-      // Markdown.configure({ html: true, tightLists: true, tightListClass: 'tight', bulletListMarker: '-', linkify: true, breaks: false }),
-      TaskList.configure({ HTMLAttributes: { class: 'task-list pl-0' } }),
-      TaskItem.configure({ nested: true, HTMLAttributes: { class: 'task-item' } }),
-      Placeholder.configure({ placeholder: placeholder || 'Start typing your tasks...' }),
+      StarterKit.configure({
+        // Configure StarterKit options if needed
+        // Exclude extensions if they conflict or are not needed
+        heading: {
+          levels: [1, 2, 3], // Allow H1, H2, H3
+        },
+        // Keep other defaults like paragraphs, bold, italic, etc.
+      }),
+      Markdown.configure({
+        html: true, // Allow HTML input/output? Set to false if only markdown needed
+        tightLists: true, // No <p> inside <li> in markdown output
+        tightListClass: 'tight', // Class for tight lists
+        bulletListMarker: '-', // Or '*'
+        linkify: true, // Auto-detect links
+        breaks: false, // Add <br> for single newlines?
+        // transformPastedText: true, // Transform pasted text to markdown
+        // transformCopiedText: true, // Transform copied text to markdown
+      }),
+      TaskList.configure({
+        // TaskList configuration if needed
+        HTMLAttributes: {
+          class: 'task-list pl-0', // Add class for styling, remove padding
+        },
+      }),
+      TaskItem.configure({
+        nested: true, // Allow nested task items
+        HTMLAttributes: {
+          // Simplified class to avoid potential conflicts
+          class: 'task-item',
+        },
+      }),
+      Placeholder.configure({
+        placeholder: placeholder || 'Start typing your tasks...',
+      }),
     ],
     content: content, // Set initial content
     editorProps: {
@@ -36,14 +65,9 @@ const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, placehol
     },
   });
 
-  // If editor isn't ready yet, show a loading state
-  if (!editor) {
-    return <div className="h-full w-full overflow-auto border rounded shadow-inner p-4">Loading editor...</div>;
-  }
-
-  // Render the editor content area wrapped in our DragAndDropProvider
+  // Render the editor content area
   return (
-      <EditorContent editor={editor} className="h-full w-full overflow-auto border rounded shadow-inner" />
+    <EditorContent editor={editor} className="h-full w-full overflow-auto border rounded shadow-inner" />
   );
 };
 
