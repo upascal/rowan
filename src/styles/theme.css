@@ -10,6 +10,16 @@
   --color-border-light: #f0f0f0;
   --color-border-focus: #3b82f6;
   
+  /* Heading group colors - light mode */
+  --color-heading-group-1: #f2f2f2; /* Slightly darker gray for h1 to distinguish from app background */
+  --color-heading-group-2: #f5f5f5; /* Light gray for h2 (current) */
+  --color-heading-group-3: #f0f0f0; /* Slightly darker gray for h3 */
+  
+  /* Heading group border colors */
+  --color-heading-border-1: #e8e8e8; /* Lightest border */
+  --color-heading-border-2: #e5e5e5; /* Current border */
+  --color-heading-border-3: #dedede; /* Slightly darker border */
+  
   --color-text-primary: #1a202c;
   --color-text-secondary: #4a5568;
   --color-text-tertiary: #718096;
@@ -42,6 +52,16 @@
     --color-border: #444444;
     --color-border-light: #333333;
     --color-border-focus: #4b91ff;
+    
+    /* Heading group colors - dark mode */
+    --color-heading-group-1-dark: #181818; /* Darkest gray in dark mode */
+    --color-heading-group-2-dark: #3e3e3e; /* Current h2 color in dark mode */
+    --color-heading-group-3-dark: #3c3c3c; /* Slightly lighter gray */
+    
+    /* Dark mode borders */
+    --color-heading-border-1-dark: #4a4a4a; /* Lightest border in dark mode */
+    --color-heading-border-2-dark: #444444; /* Current border in dark mode */
+    --color-heading-border-3-dark: #3d3d3d; /* Slightly darker border */
     
     --color-text-primary: #f0f0f0;
     --color-text-secondary: #d0d0d0;

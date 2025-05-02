@@ -16,6 +16,10 @@ export const DEFAULT_PROJECT_TEMPLATE = (projectName: string) => `# TODO
 - [ ] Task A.1
 - [ ] task A.2
 
+### Subtask Group
+- [ ] Subtask 1
+- [ ] Subtask 2
+
 ## Task Group B
 - [ ] Task B.1
   - [ ] task B.1.1

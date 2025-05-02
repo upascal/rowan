@@ -74,15 +74,19 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 0.75rem;
+  padding: 0.3rem 0.3rem;
   background-color: var(--color-bg-secondary);
   color: var(--color-text-secondary);
   border: none;
-  font-size: 0.875rem;
+  font-size: 1.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-speed) ease-in-out;
   position: relative;
+  flex: 1; /* Make each option take equal space */
+  text-align: center;
+  height: auto;
+  width: auto;
 }
 
 .segmented-control-option:not(:last-child) {

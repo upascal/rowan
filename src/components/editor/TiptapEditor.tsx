@@ -89,10 +89,12 @@ const TiptapEditor: React.FC<TiptapEditorProps> = ({ content, onChange, placehol
       ref={wrapperRef}
       className={hasSections ? 'editor-wrapper kanban' : 'editor-wrapper'}
     >
-      <EditorContent
-        editor={editor}
-        className="h-full w-full overflow-auto border rounded shadow-inner transition-colors"
-      />
+      <div className="editor-scroll-container h-full w-full overflow-auto">
+        <EditorContent
+          editor={editor}
+          className="w-full border rounded shadow-inner transition-colors"
+        />
+      </div>
     </div>
   );
 };

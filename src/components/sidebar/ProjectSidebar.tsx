@@ -54,16 +54,28 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
   return (
     <div className="project-sidebar">
       <h2 className="text-lg font-semibold mb-3">Projects</h2>
-      <input
-        type="text"
-        id="new-project-name"
-        name="new-project-name"
-        value={newProjectName}
-        onChange={(e) => onNewProjectNameChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Create New Project..."
-        className="w-full p-2 border rounded mb-4 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-      />
+      <div className="new-project-input-container">
+        <input
+          type="text"
+          id="new-project-name"
+          name="new-project-name"
+          value={newProjectName}
+          onChange={(e) => onNewProjectNameChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Create New Project..."
+          className="new-project-input"
+        />
+        {newProjectName.trim() !== "" && (
+          <button 
+            onClick={onCreateProject}
+            className="new-project-submit-btn"
+            title="Create Project"
+            aria-label="Create Project"
+          >
+            ↵
+          </button>
+        )}
+      </div>
       <ul className="project-list">
         {projects.map((projectName) => (
           <li

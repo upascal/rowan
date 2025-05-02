@@ -35,33 +35,33 @@
   outline: none;
 }
 
-/* — Headings — */
-.ProseMirror h1 {
+/* — Headings and Task Groups — */
+
+/* Base heading styles */
+.ProseMirror h1, 
+.ProseMirror h2, 
+.ProseMirror h3 {
   position: relative;
-  padding-left: 0em; /* space for handle */
-  font-size: 1.8em;
   font-weight: 600;
-  margin: 1.5rem 0 0.75rem;
-  padding-bottom: 0.3em;
-  border-bottom: 1px solid var(--color-border-light);
   color: var(--color-text-primary);
+}
+
+.ProseMirror h1 {
+  font-size: 1.8em;
+  padding: 0.75rem 1rem;
+  margin: 1.5rem 0 0;
 }
 
 .ProseMirror h2 {
-  position: relative;
-  padding-left: 0em;
   font-size: 1.5em;
-  font-weight: 600;
-  margin: 1.25rem 0 0.6rem;
-  color: var(--color-text-primary);
+  padding: 0.75rem 1rem;
+  margin: 0;
 }
 
 .ProseMirror h3 {
-  position: relative;
-  padding-left: 1.5em;
   font-size: 1.25em;
-  font-weight: 600;
-  margin: 1rem 0 0.5rem;
+  padding: 0.75rem 1rem;
+  margin: 0;
   color: var(--color-text-secondary);
 }
 
@@ -75,8 +75,8 @@
 .ProseMirror ul[data-type="taskList"],
 .ProseMirror ul.task-list {
   list-style: none;
-  margin: 0.5rem 0;
-  padding-left: 0;
+  margin: 0;
+  padding: 1.25rem;
 }
 
 /* — Nested Task-lists — */
@@ -169,35 +169,164 @@
   opacity: 0.8;
 }
 
-/* Style for task lists that follow h2 headings */
-.ProseMirror h2 + ul[data-type="taskList"],
-.ProseMirror h2 + ul.task-list {
+/* Task Group Styling - Simplified approach */
+
+/* H1 Group - Outermost container */
+.ProseMirror h1 {
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  background-color: var(--color-heading-group-1-dark);
+  border: 2px solid var(--color-heading-border-1-dark);
+  border-bottom: none;
+  margin-bottom: 0;
+  margin-top: 1.5rem;
+  z-index: 3;
+  position: relative;
+}
+
+/* Content directly after H1 */
+.ProseMirror h1 + * {
+  background-color: var(--color-heading-group-1-dark);
+  border: 2px solid var(--color-heading-border-1-dark);
+  border-top: none;
+  padding: 1rem;
   margin-top: 0;
-  padding: 1.25rem;
-  border: 1px solid var(--color-border);
+  position: relative;
+  z-index: 3;
+}
+
+/* H2 Group - Middle container */
+.ProseMirror h2 {
+  background-color: var(--color-heading-group-2-dark);
+  border: 1px solid var(--color-heading-border-2-dark);
+  border-bottom: none;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  margin: 1rem 1.5rem 0;
+  position: relative;
+  z-index: 4;
+}
+
+/* Content directly after H2 */
+.ProseMirror h2 + * {
+  background-color: var(--color-heading-group-2-dark);
+  border: 1px solid var(--color-heading-border-2-dark);
+  border-top: none;
+  margin: 0 1.5rem;
+  padding: 1rem;
+  position: relative;
+  z-index: 4;
+}
+
+/* H3 Group - Innermost container */
+.ProseMirror h3 {
+  background-color: var(--color-heading-group-3-dark);
+  border: 1px solid var(--color-heading-border-3-dark);
+  border-bottom: none;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  margin: 1rem 2rem 0;
+  position: relative;
+  z-index: 5;
+}
+
+/* Content directly after H3 */
+.ProseMirror h3 + * {
+  background-color: var(--color-heading-group-3-dark);
+  border: 1px solid var(--color-heading-border-3-dark);
+  border-top: none;
+  margin: 0 2rem;
+  padding: 1rem;
+  position: relative;
+  z-index: 5;
+}
+
+/* Bottom rounding for task groups */
+.ProseMirror h1 ~ h1,
+.ProseMirror h1 ~ h2,
+.ProseMirror h1 ~ h3,
+.ProseMirror h2 ~ h1,
+.ProseMirror h2 ~ h2,
+.ProseMirror h2 ~ h3,
+.ProseMirror h3 ~ h1,
+.ProseMirror h3 ~ h2,
+.ProseMirror h3 ~ h3 {
+  margin-top: 1.5rem;
+}
+
+/* Add bottom rounding to the last element before a new heading */
+.ProseMirror h1 ~ h1:not(:first-of-type)::before,
+.ProseMirror h1 ~ h2::before,
+.ProseMirror h1 ~ h3::before,
+.ProseMirror h2 ~ h1::before,
+.ProseMirror h2 ~ h2:not(:first-of-type)::before,
+.ProseMirror h2 ~ h3::before,
+.ProseMirror h3 ~ h1::before,
+.ProseMirror h3 ~ h2::before,
+.ProseMirror h3 ~ h3:not(:first-of-type)::before {
+  content: "";
+  display: block;
+  height: 1rem;
+  margin-top: -1rem;
   border-bottom-left-radius: 0.5rem;
   border-bottom-right-radius: 0.5rem;
   background-color: var(--color-bg-tertiary);
-  box-shadow: var(--shadow-sm);
-  transition: background-color var(--transition-speed) ease-in-out,
-              border-color var(--transition-speed) ease-in-out,
-              box-shadow var(--transition-speed) ease-in-out;
+  position: relative;
+  z-index: 2;
 }
 
-/* Add a subtle header to task groups */
-.ProseMirror h2 {
-  padding: 0.75rem 1rem;
-  margin-bottom: 0;
-  border-top-left-radius: 0.5rem;
-  border-top-right-radius: 0.5rem;
-  background-color: var(--color-accent-secondary);
-  transition: background-color var(--transition-speed) ease-in-out;
-}
-
-/* Add spacing after task groups */
-.ProseMirror h2 + ul[data-type="taskList"] + *,
-.ProseMirror h2 + ul.task-list + * {
+/* Add spacing after groups */
+.ProseMirror h1 ~ h1,
+.ProseMirror h2 ~ h1,
+.ProseMirror h3 ~ h1 {
   margin-top: 2rem;
+}
+
+/* Dark mode styling */
+@media (prefers-color-scheme: dark) {
+  .ProseMirror h1 {
+    background-color: var(--color-heading-group-1-dark);
+    border-color: var(--color-heading-border-1-dark);
+  }
+  
+  .ProseMirror h1 + * {
+    border-color: var(--color-heading-border-1-dark);
+  }
+  
+  .ProseMirror h2 {
+    background-color: var(--color-heading-group-2-dark);
+    border-color: var(--color-heading-border-2-dark);
+  }
+  
+  .ProseMirror h2 + * {
+    border-color: var(--color-heading-border-2-dark);
+  }
+  
+  .ProseMirror h3 {
+    background-color: var(--color-heading-group-3-dark);
+    border-color: var(--color-heading-border-3-dark);
+  }
+  
+  .ProseMirror h3 + * {
+    border-color: var(--color-heading-border-3-dark);
+  }
+  
+  .ProseMirror h1 ~ h1:not(:first-of-type)::before,
+  .ProseMirror h1 ~ h2::before,
+  .ProseMirror h1 ~ h3::before,
+  .ProseMirror h2 ~ h1::before,
+  .ProseMirror h2 ~ h2:not(:first-of-type)::before,
+  .ProseMirror h2 ~ h3::before,
+  .ProseMirror h3 ~ h1::before,
+  .ProseMirror h3 ~ h2::before,
+  .ProseMirror h3 ~ h3:not(:first-of-type)::before {
+    background-color: var(--color-bg-tertiary);
+  }
+}
+
+/* Add spacing after the last task group */
+.ProseMirror > *:last-child {
+  margin-bottom: 2rem;
 }
 
 /* — Kanban mode styles — */
@@ -209,14 +338,32 @@
   height: 100%;
 }
 
+/* scroll container to handle vertical overflow */
+.editor-scroll-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
+}
+
 /* multicol layout when .kanban is present */
 .editor-wrapper.kanban .ProseMirror {
   column-width: 280px;
   column-gap: 1.25rem;
   padding-top: 1.5rem;      /* align all H1s consistently */
+  padding-bottom: 2rem;     /* add padding at the bottom for better scrolling */
   flex: 1 1 auto;           /* fill wrapper vertically */
-  overflow: auto;           /* scroll both axes */
   white-space: normal;
+  min-height: auto;         /* allow content to determine height */
+  height: auto;             /* allow content to determine height */
+  max-height: none;         /* remove max-height restriction */
+  background-color: var(--color-heading-group-1-dark);
+}
+
+/* ensure the scroll container handles overflow properly */
+.editor-wrapper.kanban .editor-scroll-container {
+  overflow-x: auto;
+  overflow-y: auto;
 }
 
 /* only H1 may start a new column */
@@ -225,6 +372,7 @@
   margin-bottom: 0.75rem;
   break-before: column;
   break-inside: avoid-column;
+  
 }
 
 /* prevent other blocks from breaking columns */
@@ -252,4 +400,13 @@
   font-size: 0.95rem;
   text-align: center;
   padding: 2rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .editor-wrapper.kanban .ProseMirror {
+    background-color: var(--color-heading-group-1-dark);
+  }
+  .editor-wrapper.kanban {
+    background-color: var(--color-heading-group-1-dark);
+  }
 }
