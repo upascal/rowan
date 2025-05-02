@@ -1,54 +1,62 @@
-# React + TypeScript + Vite
+# Markdown Kanban
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Markdown Kanban is a lightweight task management application that combines the simplicity of Markdown with the visual organization of Kanban boards. Write in Markdown, visualize as Kanban.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Dual View System**: Toggle between raw Markdown editing and a visual Kanban board view
+- **Project Management**: Create, select, and manage multiple projects
+- **Local Storage**: All projects are saved in your browser's local storage
+- **Task Hierarchy**: Support for nested tasks and subtasks
+- **Markdown Compatibility**: Standard Markdown format that works with other Markdown editors
 
-## Expanding the ESLint configuration
+## How It Works
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Markdown Kanban uses a simple convention to transform Markdown into Kanban boards:
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+1. **Columns**: Level 1 headings (`# Heading`) become Kanban columns
+2. **Tasks**: Markdown task lists (`- [ ] Task`) become cards in those columns
+3. **Subtasks**: Indented task lists become nested subtasks within a card
+
+For example, this Markdown:
+
+```markdown
+# TODO
+
+- [ ] Design homepage
+- [ ] Update documentation
+
+# In Progress
+
+- [ ] Refactor API
+  - [ ] Implement error handling
+  - [ ] Add unit tests
+
+# Done
+
+- [x] Setup project
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Automatically transforms into a Kanban board with three columns (TODO, In Progress, Done) containing the respective tasks.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Getting Started
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+1. Create a new project by entering a name in the sidebar
+2. Use the default template or write your own Markdown
+3. Toggle between Markdown and Kanban views using the buttons in the header
+
+## Technical Details
+
+Built with:
+- React + TypeScript
+- Tiptap rich text editor with Markdown support
+- Local browser storage for persistence
+
+## Use Cases
+
+- Personal task management
+- Simple project planning
+- Note-taking with actionable items
+- Quick Kanban boards without complex project management tools
+
+Markdown Kanban is perfect for users who appreciate the simplicity of plain text but benefit from visual organization when managing tasks.
