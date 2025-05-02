@@ -1,0 +1,11 @@
+/* File: src/index.css */
+body {
+  font-family: sans-serif;
+  background-color: #fafafa;
+  margin: 0;
+  padding: 0;
+}
+
+textarea {
+  font-family: monospace;
+}
